@@ -10,7 +10,8 @@ print files are submitted on Moodle.
 
 | File | What |
 |---|---|
-| [`lab_sheet.md`](lab_sheet.md) | Student activity: pre-lab model, spring rate, pluck test, frequency sweep, seatpost design extension |
+| [`lab_sheet.md`](lab_sheet.md) | Lecture demo (pluck, crank through resonance, close the damper) + optional 20-min student follow-up |
+| [`lab_sheet_full.md`](lab_sheet_full.md) | Full lab version: model derivation, spring rate, seatpost design challenge, extensions |
 | [`analysis/phyphox_analysis.py`](analysis/phyphox_analysis.py) | Phone data → fₙ, ζ, T(f), with the rig model fitted; figures |
 | [`analysis/hand_calcs.py`](analysis/hand_calcs.py) | Design calculations (fₙ, sag, peak amplitude, damper estimate) |
 | `data/synthetic/` | **Synthetic** example recordings (made by the model, not measured) to try the tools |

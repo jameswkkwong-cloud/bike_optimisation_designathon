@@ -1,198 +1,112 @@
-# Bumpy Road: the quarter-bike vibration lab
+# Bumpy Road: lecture demo and student follow-up
 
-**Module:** MECH0023 Dynamics and Control (Year 3, Term 1)  
-**Time:** 45–60 min core, plus about 20 min for the recommended extension E1 · **Who:** on your own or in pairs, in the lab or at home  
-**You need:**
-- the kit;
-- **your phone** with [phyphox](https://phyphox.org) (free, iOS/Android, no account);
-- a laptop with Python 3 (`pip install numpy scipy matplotlib`);
-- a ruler;
-- about 100 g of coins or 4 AA batteries;
-- a metronome app (optional).
-
-> **Why this matters.** On a road bike, every bump passes through the tyres and frame into
-> the rider. Designers trade **comfort** (isolating the rider) against **stiffness** (handling,
-> power transfer). Your phone is the rider, the cam is the road, and the springs and magnet are
-> the "seatpost". You will measure how much road vibration reaches the rider, then design a
-> seatpost that meets a comfort target.
-
-| MECH0023 learning outcome | Where you practise it |
-|---|---|
-| Measure the dynamic response of a simple system and identify the system parameters | Tasks 1–3 |
-| Create a model of a dynamic system and implement it in a numerical simulation | Pre-lab, Extension E2 |
-| Predict dynamic performance in the frequency domain (resonance, bandwidth) | Pre-lab, Task 3, Extension E1 |
-| Understand the difference between a theoretical model and a practical system, and its limits | Discussion questions in Tasks 2–3, E1 |
-| Topics: base excitation and vibration isolators; measuring frequency response; sample rate | Task 3, E1, E3 |
+**Module:** MECH0023 Dynamics and Control · **Side A:** 10-minute lecture demo ·
+**Side B:** optional 20-minute student follow-up (kit on loan or drop-in)
 
 > ⚠️ **Safety**
-> - **Magnets** (N42 neodymium): they snap together hard and can pinch. Keep them away from
->   bank cards and pacemakers. Small parts: not for children under 14.
-> - **Strap the phone in** with the velcro strap before cranking.
-> - **Keep your fingers clear** of the cam and roller. Crank by the handle only, and no faster
->   than about 3 rev/s.
-> - End stops limit the platform's travel. If you hear knocking, slow down.
-> - **Data:** phyphox stores recordings on your phone only and needs no account.
+> - **Magnets:** strong; they pinch, so keep them away from cards and pacemakers.
+> - **Crank by the handle only**, keeping fingers clear of the cam and the platform, at no more than about 3 rev/s.
+> - **Strap the phone in** before cranking.
+> - Pluck gently (about 5 mm).
+> - phyphox needs no account; data stays on the phone.
 
----
+## The rig and its model
 
-## 0. The rig and its model
+A hand-cranked **cam** moves the **carriage** (the road) up and down by Y = 2 mm, 4 bumps per turn.
 
-```
-   fixed bridge ────┬──────────────┬──── fixed damper plate (aluminium)
-                    │ k_u (2 springs) ┆  c  (eddy-current: magnet on platform, plate fixed)
-   platform + phone ┷━━━━ m ━━━━━━━━┷      x(t)
-                    │ k_l (2 springs)
-   carriage ────────┷──── roller on cam    y(t) = Y sin(2πft),  Y = 2 mm,  f = lobes × rev/s
-```
+- **Lower springs** carry the road motion up to the **platform** (the rider: platform plus your phone).
+- **Upper springs** and a **magnet** moving past a fixed **aluminium plate** (an eddy-current damper) hold it to the fixed frame.
 
-The lower springs carry the road into the platform. The **upper springs and the damper are
-attached to the fixed frame**, not to the road. This is *not* the textbook base-excitation
-system, where the spring and damper both connect to the road.
-
----
-
-## Pre-lab (15 min, before you touch the kit)
-
-**P1. Model.** Draw a free-body diagram of the platform and show that
-
-$$m\ddot{x} + c\dot{x} + (k_l + k_u)\,x = k_l\,y
-\quad\Rightarrow\quad
-T(f) = \frac{X}{Y} = \frac{\alpha}{\sqrt{(1-r^2)^2 + (2\zeta r)^2}},$$
+$$m\ddot x + c\dot x + (k_l+k_u)\,x = k_l\,y \qquad
+T=\frac{X}{Y}=\frac{\alpha}{\sqrt{(1-r^2)^2+(2\zeta r)^2}}$$
 
 where:
-- $\alpha = k_l/(k_l + k_u)$;
-- $r = f/f_n$;
-- $f_n = \tfrac{1}{2\pi}\sqrt{k/m}$ with $k = k_l + k_u$;
-- $\zeta = c/(2\sqrt{km})$.
+- $f_n=\tfrac{1}{2\pi}\sqrt{k/m}$, with $k = k_l + k_u$;
+- $r=f/f_n$;
+- $\zeta=c/2\sqrt{km}$;
+- $\alpha=k_l/k=0.5$.
 
-What is T at very low frequency, and why is it not 1?
-
-**P2. Predict.** Each spring has a datasheet rate of 0.11 N/mm (set A) or 0.14 N/mm (set B);
-there are 2 above and 2 below. Take m = m_phone + m_platform, using the platform mass printed
-on the kit label. Calculate for set A:
-
-- $f_n$;
-- $\sqrt2\,f_n$;
-- the crank speed (rev/s) that hits resonance with the 4-lobe cam.
-
-**P3. Compare.** Plot this rig's T(f) and the textbook
-$T = \sqrt{(1+(2\zeta r)^2)/((1-r^2)^2+(2\zeta r)^2)}$ for ζ = 0.1 and 0.3. In which one does
-**more damping always help**? Why can't a car suspension simply copy this rig ("skyhook"
-damping)? Hint: what is the damper attached to?
+Road frequency f = 4 × crank turns per second.
 
 ---
 
-## Task 1. Spring rate (10 min)
+## Side A: lecture demo (about 10 min)
 
-1. Hang one spare spring from its end, with a 100 g bag of coins on it.
-2. Measure the extension and calculate k_each = mg/δ.
-3. Then k = 4·k_each.
+**Before the lecture (2 min):**
 
-**Q:** How close is your k to the datasheet? What tolerance would you expect on a cheap spring?
+1. Strap the phone in the tray and open phyphox → **Acceleration (without g)**.
+2. **⋮ → Allow remote access**, then open the URL shown on the lecture laptop: the live graph goes on the projector.
+   The phone and laptop must be on the same network. **eduroam often blocks this, so use a phone hotspot**, and test it beforehand.
+3. Set the magnet gap to **15 mm** and start a metronome app.
 
-## Task 2. Pluck test: natural frequency and damping (15 min)
+Each demo is **predict → observe → explain**. Ask the room to commit to a prediction first.
 
-1. Phone flat in the tray, screen up, strapped. In phyphox, open **"Acceleration (without g)"**.
-2. Open the magnet gap to 15 mm with the sled wing nuts.
-3. Press ▶, wait 1 s, push the platform down about 5 mm, and **let go**. Record 5 s. Do this 3 times.
-4. Repeat with the gap at **3 mm** and at **1 mm**.
-5. Export (⋮ → Export data → CSV) and run:
+### Demo 1: Pluck (natural frequency and damping)
 
-   `python phyphox_analysis.py pluck my_pluck.csv --mass 0.25`
+- **Predict:** k = 4 springs × 0.11 N/mm = 440 N/m, m ≈ 0.25 kg. How many bounces per second? *(fₙ ≈ 6.7 Hz)*
+- **Observe:** push the platform down about 5 mm and let go. A decaying wave appears on screen.
+- **Explain:**
+  - The bounce rate is $f_n=\tfrac{1}{2\pi}\sqrt{k/m}$, set by stiffness and mass only.
+  - How fast it dies away is the damping ratio ζ: each peak is a fixed fraction of the last, so $\zeta \approx \tfrac{1}{2\pi}\ln(a_0/a_1)$.
 
-   Use your own m in kg. The script prints $f_n$ and ζ and saves a figure.
+### Demo 2: Crank slow → fast (resonance, then isolation)
 
-| Gap (mm) | $f_n$ (Hz) | ζ | Best-fitting decay | k = m(2πf_n)² (N/m) |
-|---|---|---|---|---|
-| 15 | | | | |
-| 3 | | | | |
-| 1 | | | | |
+- **Predict:** at what crank speed will the rider shake most? *(fₙ/4 ≈ 1.7 rev/s ≈ 100 rpm)*
+- **Observe:** crank in metronome steps, holding each:
+  - **60 bpm (slow):** the platform moves *less* than the road;
+  - **about 100 bpm:** the platform moves *far more* than the road. **Resonance.**
+  - **about 150 bpm:** the base shakes but the phone is almost still. **Isolation.**
+- **Explain:**
+  - At low speed T ≈ α = 0.5, because only the lower springs connect the rider to the road.
+  - T peaks at f = fₙ.
+  - Above √2·fₙ (about 9.5 Hz, about 140 rpm) the springs absorb the road. That is what a good seatpost does.
 
-**No laptop?** Read the peak spacing off the phyphox graph to get $f_d$. Then take the log
-decrement by hand from two peaks n cycles apart: $\delta = \tfrac1n\ln(a_0/a_n)$ and
-$\zeta = \delta/\sqrt{4\pi^2+\delta^2}$.
+### Demo 3: Close the damper
 
-**Discuss:**
-- Does $f_n$ match P2? If not, which input (k or m) is most likely wrong?
-- The script fits an **exponential** decay (viscous damping) and a **straight-line** decay
-  (Coulomb friction). Which fits your data? Where could friction come from?
-- How does ζ change with the gap? Eddy-current force ∝ B², and B falls quickly with distance.
-
-## Task 3. Frequency sweep: transmissibility T(f) (20 min)
-
-1. Fit the **4-lobe cam**. Set the gap to 3 mm.
-2. Start recording, then crank in **steps**, holding each speed for about 6 s. Set the
-   metronome to one beat per crank turn: 60, 75, 85, 95, 100, 105, 115, 130, 145, 160 bpm.
-   That gives road frequencies of 4–11 Hz. Steady cranking matters: uneven speed smears the
-   peak.
-3. Run:
-
-   `python phyphox_analysis.py sweep my_sweep.csv --fn <Task 2> --zeta <Task 2>`
-
-   The script computes T = X/Y for each 2 s window, overlays the model using your Task 2
-   values, and fits $f_n$, ζ and α directly to the sweep.
-
-**Discuss:**
-- Where is the peak? What is T at the lowest frequencies? Compare with α from P1.
-- Above what frequency does the rider move less than at low speed? Compare with $\sqrt2 f_n$.
-- Is the ζ fitted to the sweep the same as the pluck-test ζ? Give **two** reasons it might
-  differ. Think about amplitude, friction and your cranking.
-- Estimate the half-power bandwidth and compare it with $2\zeta f_n$.
-- **Design question:** if the platform were a saddle on a rough road at about 9 Hz, would you make
-  the springs softer or stiffer, and add or remove mass? What does that cost in handling
-  (stiffness)? Test your answer in E1.
+- **Predict:** close the magnet gap to 1 mm. What happens to the resonance peak, and to the isolation at high speed?
+- **Observe:** crank through resonance again. The peak is much smaller, and the rider is still isolated at speed.
+- **Explain:**
+  - A moving magnet induces eddy currents in the plate, which oppose the motion: $c \propto \sigma\, t\, B^2 A$, and B falls fast with distance.
+  - Here the damper is fixed to the frame ("skyhook"), so more damping helps at **every** frequency.
+  - A car's damper connects to the road and can't do this. Only **active control** can imitate it, which links to the control half of the module.
 
 ---
 
-## Extensions
+## Side B: student follow-up (optional, about 20 min)
 
-- **E1. Design the seatpost (recommended, 20 min).**
+1. **Record** four files in phyphox (⋮ → Export data → CSV):
 
-  **Specification:**
-  - **Comfort:** at a road frequency of **9 Hz**, T ≤ **0.4**.
-  - **Safety:** when passing through resonance, T_peak ≤ **3**. That keeps the platform's travel
-    under about 6 mm.
+   | File | How |
+   |---|---|
+   | `pluck_15mm.csv` | Gap 15 mm: pluck about 5 mm, record 5 s |
+   | `sweep_15mm.csv` | Gap 15 mm: crank in metronome steps, 60, 75, 85, 95, 100, 105, 115, 130, 145, 160 bpm, about 6 s each |
+   | `pluck_1mm.csv`, `sweep_1mm.csv` | The same with a 1 mm gap |
 
-  **Choices:**
-  - spring set **A or B**;
-  - added mass **0 or about 100 g** (coins or batteries, taped under the strap);
-  - magnet gap **1–15 mm**.
+2. **Analyse.** Put the files in `data/my_runs/` of the GitHub repo and run:
 
-  1. **Predict first.** Use the model and *your* measured k, m and ζ(gap) to fill the table.
-  2. Choose a design, build it, and **verify** with a sweep (as in Task 3).
+   ```bash
+   python analysis/phyphox_analysis.py analyse data/my_runs --mass <your phone + platform in kg>
+   ```
 
-  | Springs | Added mass | Gap | Predicted $f_n$ | Predicted T(9 Hz) | Predicted T_peak | Meets spec? | Measured T(9 Hz) |
-  |---|---|---|---|---|---|---|---|
-  | | | | | | | | |
+   You get each sweep plotted against the theory from its pluck, plus `compare.png` and `summary.csv`.
+   **No laptop?** Read fₙ off the phyphox graph, and take $\zeta \approx \tfrac{1}{2\pi n}\ln(a_0/a_n)$ from two peaks n cycles apart.
 
-  **Discuss:**
-  - Which design is the **stiffest** that still meets the comfort target? On a bike, why would
-    you want that one?
-  - What did the model not capture?
+3. **Answer:**
+   1. How close is your measured fₙ to $\tfrac{1}{2\pi}\sqrt{k/m}$? Which input is most likely off?
+   2. Why does T start at about **0.5** and not 1? Which springs connect the rider to the road?
+   3. Did the pluck decay look **exponential** (viscous damping) or like a **straight line** (friction)? Where could friction come from?
+   4. *(Our capstone link)* To isolate a rider from a **9 Hz** road, would you make the springs softer or stiffer, and add or remove mass? What would that cost a bike in handling stiffness?
 
-- **E2. Simulation.** Write the equation of motion in Python or MATLAB/Simulink, adding
-  friction $F\,\mathrm{sign}(\dot x)$. Drive it with your sweep's crank speeds. What value of F
-  reproduces your pluck decay?
-- **E3. Sample rate.** phyphox shows the sensor rate. What would a 9 Hz road look like if you
-  sampled at 12 Hz? Sketch it and compute the alias frequency.
-- **E4. Configuration.** If the damper plate were mounted on the carriage (damper to the road),
-  how would T(f) change above $\sqrt2 f_n$? Use P3.
+## What this supports in MECH0023
 
-## Hand in
+| Learning outcome | Where |
+|---|---|
+| Measure the dynamic response of a simple system and identify its parameters | Demo 1, Side B |
+| Predict frequency-domain behaviour: resonance, isolation | Demos 2–3, Q2, Q4 |
+| Theoretical model vs practical system, and its limits | Q1, Q3 |
 
-1. The T(f) plot with measured points, your model from Task 2, and the fitted model.
-2. The prediction-vs-measurement table from Task 2 (and E1 if done).
-3. Three sources of discrepancy, **each with a test that would confirm it**.
-
----
-
-<sub>Instructor notes. Expected values:
-- $f_n$ ≈ 6–7 Hz (phones 150–230 g, set A);
-- T(f → 0) ≈ 0.5;
-- ζ ≈ 0.05 at a wide gap, rising to about 0.1–0.3 at 1 mm with the stacked magnets (to be confirmed on the prototype);
-- some Coulomb friction from the linear bearings is expected.
-
-The E1 spec is met by set A + 100 g with ζ ≳ 0.1; set A alone and set B fail on comfort.
-
-Analysis script and synthetic example data: `analysis/phyphox_analysis.py`
-(`python phyphox_analysis.py demo`).</sub>
+<sub>Instructor notes.
+- **Expected values:** fₙ ≈ 6–7 Hz (phones of 150–230 g); T(low) ≈ 0.5; ζ ≈ 0.05 at a 15 mm gap, rising at 1 mm (measure it).
+- **Printed sleeve bearings add friction:** expect some straight-line decay. A drop of light oil on the rods helps.
+- **Uneven cranking smears the peak:** use the metronome.
+- **Full version** (model derivation, spring-rate task, seatpost design challenge, simulation and sample-rate extensions): `lab_sheet_full.md`.</sub>
