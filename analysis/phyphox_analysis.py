@@ -10,6 +10,11 @@ decimal comma). The .zip that phyphox makes can be passed directly.
     python phyphox_analysis.py sweep  sweep.csv  [--fn 6.6 --zeta 0.08] # Task 3: T(f)
     python phyphox_analysis.py base   base.csv                          # calibrate cam amplitude Y
     python phyphox_analysis.py compare g15.csv g3.csv g1.csv --labels "15 mm" "3 mm" "1 mm"
+    python phyphox_analysis.py analyse data/my_runs --mass 0.27       # EASIEST: whole folder, see below
+
+`analyse` matches files by name: base.csv (optional), pluck_<tag>.csv, sweep_<tag>.csv
+(tag = your set-up, e.g. 15mm, 3mm, 1mm). Each sweep is plotted against the theory from the
+pluck with the same tag. Results (figures, summary.csv, notes.txt) go to <folder>/results.
     python phyphox_analysis.py demo                                     # synthetic data, no rig needed
 
 THE RIG MODEL (not the textbook one). The lower springs (k_l) join the cam carriage to
@@ -429,8 +434,9 @@ def compare_sweeps(files, labels=None, Y_mm=2.0, axis="auto"):
     return out
 
 
-def plot_compare(results, out, title="Transmissibility vs road frequency"):
-    """Measured T(f) for each run (points) with its fitted rig model (line), plus a summary table."""
+def plot_compare(results, out, title="Transmissibility vs road frequency", theories=None):
+    """Measured T(f) for each run (points) with its fitted rig model (line), plus a summary table.
+    theories: optional {label: {"fn", "zeta", "alpha"}} drawn dotted (prediction from the pluck test)."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -448,6 +454,10 @@ def plot_compare(results, out, title="Transmissibility vs road frequency"):
             rows.append([lab, f"{fp['fn_Hz']:.2f}", f"{fp['zeta']:.3f}", f"{fp['alpha']:.2f}", f"{r['peak_T']:.2f}"])
         else:
             rows.append([lab, "-", "-", "-", f"{r['peak_T']:.2f}"])
+        th = (theories or {}).get(lab)
+        if th:
+            ax.plot(ff, transmissibility_rig(ff, th["fn"], th["zeta"], th.get("alpha", 0.5)), ":", color=col, lw=1.4,
+                    label=f"{lab}: predicted from pluck")
     ax.axhline(1.0, color="0.85", lw=0.8)
     ax.set_yscale("log")
     ax.set_xlim(1, 16)
@@ -466,6 +476,106 @@ def plot_compare(results, out, title="Transmissibility vs road frequency"):
     plt.close(fig)
     return rows
 
+
+
+# --- one command for a folder of recordings ------------------------------------------
+def _tag(path, prefix):
+    stem = os.path.splitext(os.path.basename(path))[0]
+    t = stem[len(prefix):].lstrip("_- ")
+    return t or "run"
+
+
+def _tag_key(tag):
+    """Set-ups in a natural order: numeric tags largest first (15mm, 3mm, 1mm), then names."""
+    m = re.search(r"[-+]?\d*\.?\d+", tag)
+    return (0, -float(m.group())) if m else (1, tag)
+
+
+def analyse_folder(folder, mass=0.25, Y_mm=None, alpha=0.5, out=None, axis="auto"):
+    """Analyse every recording in `folder`, matched by file name:
+        base*.csv            phone taped to the carriage -> measured road amplitude Y (optional)
+        pluck_<tag>.csv      e.g. pluck_15mm.csv -> fn, zeta for that set-up
+        sweep_<tag>.csv      e.g. sweep_15mm.csv -> T(f); theory curve uses pluck_<tag>'s fn, zeta
+    (.zip exports from phyphox work too.) Writes figures and summary.csv to out
+    (default <folder>/results) and returns the summary rows."""
+    import csv as _csv
+    import glob
+    out = out or os.path.join(folder, "results")
+    os.makedirs(out, exist_ok=True)
+    files = sorted(glob.glob(os.path.join(folder, "*.csv")) + glob.glob(os.path.join(folder, "*.zip")))
+    pick = lambda pre: [f for f in files if os.path.basename(f).lower().startswith(pre)]   # noqa: E731
+    notes = []
+    # 1. road amplitude
+    Y_used, Y_src = (Y_mm, "given") if Y_mm else (2.0, "nominal cam (no base file)")
+    if not Y_mm and pick("base"):
+        t, axes, _ = load(pick("base")[0])
+        Yb = analyse_base(t, choose_axis(axes, axis)[1])
+        if Yb["n_used"] >= 3:
+            Y_used, Y_src = Yb["Y_mm_median"], f"measured ({os.path.basename(pick('base')[0])})"
+        else:
+            notes.append("base file had too few clean windows: using the nominal 2 mm")
+    # 2. plucks
+    plucks = {}
+    for f in pick("pluck"):
+        tag = _tag(f, "pluck")
+        try:
+            t, axes, _ = load(f)
+            r = analyse_pluck(t, choose_axis(axes, axis)[1], mass=mass)
+            plot_pluck(r, os.path.join(out, f"pluck_{tag}.png"), f"Pluck test ({tag})")
+            plucks[tag] = r
+        except Exception as e:                                       # noqa: BLE001  keep going, report it
+            notes.append(f"pluck {tag}: {e}")
+    # 3. sweeps, each against the pluck with the same tag (else the hand-calc prediction)
+    sweeps, theories = [], {}
+    rows = []
+    for f in pick("sweep"):
+        tag = _tag(f, "sweep")
+        try:
+            t, axes, _ = load(f)
+            r = analyse_sweep(t, choose_axis(axes, axis)[1], Y_mm=Y_used)
+        except Exception as e:                                       # noqa: BLE001
+            notes.append(f"sweep {tag}: {e}")
+            continue
+        p = plucks.get(tag)
+        th = {"fn": p["fn_Hz"], "zeta": p["zeta"], "alpha": alpha} if p else None
+        plot_sweep(r, os.path.join(out, f"sweep_{tag}.png"), th, f"Frequency sweep ({tag})")
+        if th:
+            theories[tag] = th
+        else:
+            notes.append(f"sweep {tag}: no pluck_{tag} file, theory curve = hand-calc prediction")
+        if r["end_stop_warning"]:
+            notes.append(f"sweep {tag}: platform near the end stops, peak T clipped")
+        sweeps.append((tag, r))
+    # 4. summary (one row per tag)
+    sweeps.sort(key=lambda tr: _tag_key(tr[0]))
+    tags = sorted(set(plucks) | {t for t, _ in sweeps}, key=_tag_key)
+    sw = dict(sweeps)
+    for tag in tags:
+        p, r = plucks.get(tag), sw.get(tag)
+        fit = (r or {}).get("fit") or {}
+        rows.append({
+            "setup": tag,
+            "fn_pluck_Hz": round(p["fn_Hz"], 3) if p else "",
+            "zeta_pluck": round(p["zeta"], 4) if p else "",
+            "decay": p["damping_model"] if p else "",
+            "fn_sweep_fit_Hz": round(fit["fn_Hz"], 3) if fit else "",
+            "zeta_sweep_fit": round(fit["zeta"], 4) if fit else "",
+            "alpha_fit": round(fit["alpha"], 3) if fit else "",
+            "peak_T": round(r["peak_T"], 3) if r else "",
+            "f_at_peak_Hz": round(r["f_at_peak_Hz"], 2) if r else "",
+            "fn_predicted_Hz": PREDICTED["fn"], "Y_mm": round(Y_used, 3), "mass_kg": mass,
+        })
+    if len(sweeps) >= 2:
+        plot_compare(sweeps, os.path.join(out, "compare.png"), "Measured T(f) for each set-up", theories)
+    with open(os.path.join(out, "summary.csv"), "w", newline="") as fh:
+        if rows:
+            w = _csv.DictWriter(fh, fieldnames=list(rows[0]))
+            w.writeheader()
+            w.writerows(rows)
+    with open(os.path.join(out, "notes.txt"), "w") as fh:
+        fh.write(f"Y = {Y_used:.3f} mm ({Y_src}); mass = {mass} kg; alpha = {alpha}\n")
+        fh.write("\n".join(notes) + ("\n" if notes else ""))
+    return rows, notes, Y_used, Y_src
 
 # --- CLI --------------------------------------------------------------------------------
 def _print(d, indent="  "):
@@ -541,8 +651,30 @@ def main(argv=None):
     s.add_argument("--Y", type=float, default=2.0, help="cam lobe amplitude in mm (measure with `base`)")
     s.add_argument("--axis", default="auto", choices=["auto", "x", "y", "z"])
     s.add_argument("--out", default="compare.png")
+    s = sub.add_parser("analyse", help="analyse a whole folder: base*.csv, pluck_<tag>.csv, sweep_<tag>.csv")
+    s.add_argument("folder")
+    s.add_argument("--mass", type=float, default=0.25, help="moving mass in kg (phone + platform): WEIGH IT")
+    s.add_argument("--Y", type=float, help="cam amplitude in mm (default: measured from base*.csv, else 2.0)")
+    s.add_argument("--alpha", type=float, default=0.5, help="k_lower / (k_lower + k_upper)")
+    s.add_argument("--axis", default="auto", choices=["auto", "x", "y", "z"])
+    s.add_argument("--out", help="output folder (default <folder>/results)")
     sub.add_parser("demo")
     args = ap.parse_args(argv)
+    if args.cmd == "analyse":
+        rows, notes, Y, src = analyse_folder(args.folder, args.mass, args.Y, args.alpha, args.out, args.axis)
+        out = args.out or os.path.join(args.folder, "results")
+        print(f"Y = {Y:.2f} mm ({src}), mass = {args.mass} kg")
+        if rows:
+            print(f"{'set-up':>10s} {'fn pluck':>9s} {'zeta pluck':>11s} {'fn sweep':>9s} {'zeta sweep':>11s} {'peak T':>7s}")
+            for r in rows:
+                print(f"{r['setup']:>10s} {str(r['fn_pluck_Hz']):>9s} {str(r['zeta_pluck']):>11s} "
+                      f"{str(r['fn_sweep_fit_Hz']):>9s} {str(r['zeta_sweep_fit']):>11s} {str(r['peak_T']):>7s}")
+        else:
+            print("no pluck_*.csv or sweep_*.csv files found")
+        for n in notes:
+            print("  note:", n)
+        print(f"figures + summary.csv: {out}")
+        return
     if args.cmd == "demo":
         demo()
         return

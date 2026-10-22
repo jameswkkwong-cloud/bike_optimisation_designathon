@@ -22,14 +22,23 @@ print files are submitted on Moodle.
 ```bash
 pip install -r requirements.txt
 python analysis/phyphox_analysis.py demo          # synthetic data -> figures/, no rig needed
-python -m pytest -q                                # 9 tests
+python -m pytest -q                                # 10 tests
 ```
 
 ## Using it with the kit
 
 1. In phyphox open **"Acceleration (without g)"**, phone flat in the tray, strapped.
 2. Record, then **⋮ → Export data → CSV**. The `.zip` that phyphox makes works too.
-3. Analyse:
+3. **Easiest:** put the files in `data/my_runs/` named `base.csv` (optional), `pluck_<setup>.csv`,
+   `sweep_<setup>.csv` (e.g. `pluck_15mm.csv`, `sweep_15mm.csv`) and run **one command**:
+
+   ```bash
+   python analysis/phyphox_analysis.py analyse data/my_runs --mass 0.27
+   ```
+
+   It measures Y from `base.csv`, analyses each pluck, plots each sweep against the theory from
+   the pluck with the same name, and writes figures + `summary.csv` to `data/my_runs/results/`.
+4. Or run the steps one at a time:
 
 | Test | What you do | Command | You get |
 |---|---|---|---|

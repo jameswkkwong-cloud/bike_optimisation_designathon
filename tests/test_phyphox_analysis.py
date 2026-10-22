@@ -95,3 +95,28 @@ def test_compare_orders_damping_and_writes_figure(tmp_path):
     assert zl < zh and res[0][1]["peak_T"] > res[1][1]["peak_T"]
     P.main(["compare", *files, "--labels", "low", "high", "--out", str(tmp_path / "c.png")])
     assert (tmp_path / "c.png").stat().st_size > 10_000
+
+
+def test_analyse_folder_matches_files_and_uses_pluck_theory(tmp_path):
+    d = tmp_path / "runs"
+    d.mkdir()
+    t = np.arange(0, 30, 0.01)
+    th = 2 * np.pi * (0.8 * t + 0.5 * 2.2 * t ** 2 / 30)
+    y = 1.9e-3 * np.sin(4 * th)
+    P.write_phyphox_csv(str(d / "base.csv"), t, np.gradient(np.gradient(y, t), t))
+    for tag, z in (("15mm", 0.05), ("1mm", 0.2)):
+        tp, ap_ = P.simulate("pluck", fn=6.68, zeta=z, fs=200, noise=0.05)
+        P.write_phyphox_csv(str(d / f"pluck_{tag}.csv"), tp, ap_)
+        ts, as_ = P.simulate("sweep", fn=6.68, zeta=z, Y_mm=1.9, fs=100, noise=0.05, duration=40, jitter=0.1)
+        P.write_phyphox_csv(str(d / f"sweep_{tag}.csv"), ts, as_)
+    P.main(["analyse", str(d), "--mass", "0.25"])
+    out = d / "results"
+    rows = {r["setup"]: r for r in __import__("csv").DictReader(open(out / "summary.csv"))}
+    assert set(rows) == {"15mm", "1mm"}
+    assert float(rows["15mm"]["Y_mm"]) == pytest.approx(1.9, rel=0.08)          # Y measured from base.csv
+    for tag, z in (("15mm", 0.05), ("1mm", 0.2)):
+        assert float(rows[tag]["fn_pluck_Hz"]) == pytest.approx(6.68, rel=0.04)
+        assert float(rows[tag]["zeta_pluck"]) == pytest.approx(z, rel=0.15)
+    assert float(rows["15mm"]["peak_T"]) > float(rows["1mm"]["peak_T"])
+    for f in ("pluck_15mm.png", "sweep_1mm.png", "compare.png", "notes.txt"):
+        assert (out / f).exists()
