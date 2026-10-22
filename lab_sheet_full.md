@@ -1,5 +1,8 @@
 # Bumpy Road: the quarter-bike vibration lab (FULL version: derivation, spring rate, seatpost challenge, extensions)
 
+> **Note (22 Oct):** the numbers in this full version assume 2 springs below and 2 above (k = 440 N/m, fₙ ≈ 6.7 Hz).
+> The final rig uses **4 + 4 springs** (k = 880 N/m, fₙ ≈ 9.4 Hz, resonance at ≈ 140 crank rpm, isolation beyond hand speed).
+
 **Module:** MECH0023 Dynamics and Control (Year 3, Term 1)  
 **Time:** 45–60 min core, plus about 20 min for the recommended extension E1 · **Who:** on your own or in pairs, in the lab or at home  
 **You need:**

@@ -47,9 +47,9 @@ def stiffness_for(fn, m):
 def main():
     m_phone, m_platform = 0.180, 0.070          # kg (phones vary ~0.15-0.23 kg)
     m = m_phone + m_platform
-    k = 440.0                                     # N/m: 4 x RS 821-352 (0.11 N/mm); 560 with RS 751-477 (0.14)
+    k = 880.0                                     # N/m: 8 x RS 821-352 (0.11 N/mm), 4 below + 4 above (as built, v6)
     Y = 2.0e-3                                    # m, cam lobe amplitude
-    lobes, crank_rps = 3, (1.0, 3.0)
+    lobes, crank_rps = 4, (1.0, 3.0)
 
     fn = natural_frequency(k, m)
     sag = m * G / k
@@ -60,7 +60,10 @@ def main():
     print(f"  static sag mg/k        = {sag*1000:.1f} mm")
     print(f"  road frequency range   = {lobes*crank_rps[0]:.0f}–{lobes*crank_rps[1]:.0f} Hz "
           f"({lobes}-lobe cam at {crank_rps[0]:.0f}–{crank_rps[1]:.0f} rev/s)")
-    print(f"  isolation starts at    = {math.sqrt(2)*fn:.2f} Hz (r = sqrt 2)")
+    print(f"  resonance crank speed  = {fn / lobes * 60:.0f} rpm ({lobes}-lobe cam)")
+    iso = math.sqrt(2) * fn
+    print(f"  isolation starts at    = {iso:.2f} Hz (r = sqrt 2) = {iso / lobes * 60:.0f} rpm"
+          f"{'  -> NOT reachable by hand (max about 3 rev/s)' if iso / lobes > 3 else ''}")
     for lo, hi in ((0.150, 0.230),):
         print(f"  fn range for phones {lo*1000:.0f}–{hi*1000:.0f} g: "
               f"{natural_frequency(k, lo+m_platform):.2f}–{natural_frequency(k, hi+m_platform):.2f} Hz")
@@ -84,7 +87,8 @@ def main():
     print("     would unload and the platform would hop: springs are preloaded (top bridge) and")
     print("     travel is limited by end stops (+-25 mm)")
     print("   - peak acceleration < 3 g, inside a phone accelerometer's range (check +-8 g)")
-    print("   - a 4-lobe cam reaches ~10 Hz at 2.5 rev/s (3 rev/s is fast by hand)")
+    print("   - with 8 springs, resonance (~9.4 Hz) needs ~140 rpm; isolation (~13 Hz) is beyond hand cranking,")
+    print("     so the demo shows slow-speed T = 0.5, the resonance peak and damping, not isolation")
 
 
 if __name__ == "__main__":

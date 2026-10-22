@@ -45,7 +45,7 @@ python -m pytest -q                                # 10 tests
 |---|---|---|---|
 | **Pluck** | Push the platform down ~5 mm, release, record 5 s | `python analysis/phyphox_analysis.py pluck pluck.csv --mass 0.25` | fₙ, ζ (log decrement / curve fit), viscous vs friction decay, figure |
 | **Base** (once) | Phone taped to the **carriage**, short crank | `... base base.csv` | Real road amplitude Y (nominal 2 mm) |
-| **Sweep** | Crank in steady steps (metronome), slow → fast | `... sweep sweep.csv --Y 2.0 --fn 6.6 --zeta 0.08` | T(f) with model overlay and fitted fₙ, ζ, α |
+| **Sweep** | Crank in steady steps (metronome), slow → fast | `... sweep sweep.csv --Y 2.0 --fn 9.4 --zeta 0.07` | T(f) with model overlay and fitted fₙ, ζ, α |
 | **Compare** | One sweep per magnet gap | `... compare g15.csv g3.csv g1.csv --labels "15 mm" "3 mm" "1 mm"` | All T(f) curves + fitted table on one figure |
 
 Use your measured moving mass for `--mass` (phone + platform, kg) and the Y from `base`.

@@ -25,7 +25,7 @@ FIXED frame (bridge, damper upright). With platform motion x and road motion y:
     T = X/Y = alpha / sqrt((1 - r^2)^2 + (2 zeta r)^2),   alpha = k_l / (k_l + k_u)
 
 with fn = (1/2pi) sqrt(k/m), k = k_l + k_u, zeta = c / (2 sqrt(k m)), r = f/fn.
-Two springs above and two below give alpha = 0.5: at low frequency the platform moves half
+Four springs above and four below (as built) give alpha = 0.5: at low frequency the platform moves half
 as much as the road. Because the damper is grounded ("skyhook"), more damping lowers T at
 EVERY frequency, unlike the textbook base-excited system (damper to the road), where
 damping worsens isolation above sqrt(2) fn. The textbook curve is plotted for comparison.
@@ -48,7 +48,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 DESIGNATHON = os.path.abspath(os.path.join(HERE, ".."))
 END_STOP_MM = 21.0                   # platform travel to the end stops (manufacturing/params.py)
-PREDICTED = {"fn": 6.68, "zeta": 0.10, "alpha": 0.5}   # hand_calcs.py (k = 440 N/m, m = 250 g)
+PREDICTED = {"fn": 9.44, "zeta": 0.07, "alpha": 0.5}   # hand_calcs.py (k = 880 N/m: 8 springs, m = 250 g)
 
 
 # --- models ---------------------------------------------------------------------
