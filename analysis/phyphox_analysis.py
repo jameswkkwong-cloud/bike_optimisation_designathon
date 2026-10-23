@@ -7,7 +7,7 @@ tray. Export: menu > Export Data > CSV (comma, decimal point) or Excel-style (se
 decimal comma). The .zip that phyphox makes can be passed directly.
 
     python phyphox_analysis.py pluck  pluck.csv  [--mass 0.25]          # Task 2: fn, zeta
-    python phyphox_analysis.py sweep  sweep.csv  [--fn 6.6 --zeta 0.08] # Task 3: T(f)
+    python phyphox_analysis.py sweep  sweep.csv  [--fn 9.4 --zeta 0.07] # Task 3: T(f)
     python phyphox_analysis.py base   base.csv                          # calibrate cam amplitude Y
     python phyphox_analysis.py compare g15.csv g3.csv g1.csv --labels "15 mm" "3 mm" "1 mm"
     python phyphox_analysis.py analyse data/my_runs --mass 0.27       # EASIEST: whole folder, see below
