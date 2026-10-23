@@ -596,7 +596,7 @@ def demo(outdir=None, figdir=None):
     figdir = figdir or os.path.join(DESIGNATHON, "figures")
     os.makedirs(outdir, exist_ok=True)
     os.makedirs(figdir, exist_ok=True)
-    truth = {"fn": 6.4, "zeta": 0.07, "alpha": 0.5, "friction_N": 0.02, "crank_unevenness": 0.1}
+    truth = {"fn": 9.4, "zeta": 0.07, "alpha": 0.5, "friction_N": 0.02, "crank_unevenness": 0.1}
     t, a = simulate("pluck", fn=truth["fn"], zeta=truth["zeta"], friction_N=truth["friction_N"], fs=100)
     pp = os.path.join(outdir, "pluck_synthetic.csv")
     write_phyphox_csv(pp, t, a)
@@ -609,13 +609,13 @@ def demo(outdir=None, figdir=None):
     rp = analyse_pluck(tt, choose_axis(axes)[1])
     print("\npluck:")
     _print(rp)
-    plot_pluck(rp, os.path.join(figdir, "phyphox_demo_pluck.png"), "SYNTHETIC pluck test")
+    plot_pluck(rp, os.path.join(figdir, "phyphox_demo_pluck.png"), "Example output (synthetic data): pluck test")
     tt, axes, _ = load(sp)
     rs = analyse_sweep(tt, choose_axis(axes)[1])
     print("\nsweep:")
     _print(rs)
     plot_sweep(rs, os.path.join(figdir, "phyphox_demo_sweep.png"),
-               theory={"fn": rp["fn_Hz"], "zeta": rp["zeta"], "alpha": 0.5}, title="SYNTHETIC frequency sweep")
+               theory={"fn": rp["fn_Hz"], "zeta": rp["zeta"], "alpha": 0.5}, title="Example output (synthetic data): frequency sweep")
     files = []
     for lab, z in (("gap 15 mm", 0.05), ("gap 3 mm", 0.10), ("gap 1 mm", 0.20)):
         t, a = simulate("sweep", fn=truth["fn"], zeta=z, friction_N=truth["friction_N"], seed=3, fs=100,
@@ -624,7 +624,7 @@ def demo(outdir=None, figdir=None):
         write_phyphox_csv(fp, t, a)
         files.append(fp)
     plot_compare(compare_sweeps(files, ["15 mm", "3 mm", "1 mm"]),
-                 os.path.join(figdir, "phyphox_demo_compare.png"), "SYNTHETIC: three damper gaps (true zeta 0.05 / 0.10 / 0.20 + friction)")
+                 os.path.join(figdir, "phyphox_demo_compare.png"), "Example output (synthetic data): three damper gaps")
     print(f"\nfigures: {figdir}/phyphox_demo_pluck.png, phyphox_demo_sweep.png, phyphox_demo_compare.png")
     return rp, rs
 
